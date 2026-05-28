@@ -150,6 +150,20 @@ export interface ExpenseReportResponse {
   rows: Expense[]
 }
 
+export interface SummaryReportResponse {
+  from_date: string | null
+  to_date: string | null
+  total_income: string
+  total_expense: string
+  balance: string
+  income_by_source: Array<IncomeSource & {
+    total_amount: string
+  }>
+  expense_by_category: Array<ExpenseCategory & {
+    total_amount: string
+  }>
+}
+
 export interface SingleDataResponse<T> {
   data: T
 }

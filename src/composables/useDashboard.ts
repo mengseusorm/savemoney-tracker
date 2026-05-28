@@ -15,10 +15,7 @@ const _useDashboard = () => {
     'g-e': () => router.push('/expenses'),
     'g-g': () => router.push('/saving-goals'),
     'g-r': () => router.push('/reports/incomes'),
-    'g-i': () => router.push('/inbox'),
-    'g-c': () => router.push('/customers'),
-    'g-s': () => router.push('/settings'),
-    'n': () => isNotificationsSlideoverOpen.value = !isNotificationsSlideoverOpen.value
+    'g-c': () => router.push('/reports/compare')
   })
 
   watch(() => route.fullPath, () => {

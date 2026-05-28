@@ -307,16 +307,7 @@ onMounted(loadIncomeSources)
         :data="filteredSources"
         :columns="columns"
         :loading="isFetching"
-        sticky
         class="shrink-0"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
-          separator: 'h-0'
-        }"
       >
         <template #empty>
           <div class="py-10 text-center">
