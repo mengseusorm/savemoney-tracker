@@ -9,6 +9,7 @@ import { createHead } from '@unhead/vue/client'
 import ui from '@nuxt/ui/vue-plugin'
 
 import App from './App.vue'
+import { useAuth } from './composables/useAuth'
 
 const app = createApp(App)
 
@@ -16,6 +17,33 @@ const head = createHead()
 const router = createRouter({
   routes: setupLayouts(routes as RouteRecordRaw[]),
   history: createWebHistory()
+})
+
+router.beforeEach(async (to) => {
+  const { isAuthenticated, user, fetchUser } = useAuth()
+  const isLoginRoute = to.path === '/login'
+
+  if (isLoginRoute && isAuthenticated.value) {
+    return '/'
+  }
+
+  if (!isLoginRoute && !isAuthenticated.value) {
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath }
+    }
+  }
+
+  if (!isLoginRoute && !user.value) {
+    try {
+      await fetchUser()
+    } catch {
+      return {
+        path: '/login',
+        query: { redirect: to.fullPath }
+      }
+    }
+  }
 })
 
 app.use(head)

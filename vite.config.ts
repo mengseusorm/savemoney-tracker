@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import vueRouter from 'vue-router/vite'
 import vueLayouts from 'vite-plugin-vue-layouts'
 import ui from '@nuxt/ui/vite'
-
+import Inspector from 'vite-plugin-vue-inspector'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -12,10 +12,11 @@ export default defineConfig({
     }),
     vueLayouts(),
     vue(),
+    Inspector(),
     ui({
       ui: {
         colors: {
-          primary: 'green',
+          primary: 'rose',
           neutral: 'zinc'
         }
       }
