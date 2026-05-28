@@ -38,9 +38,30 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/currencies': RouteRecordInfo<
+      '/currencies',
+      '/currencies',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/customers': RouteRecordInfo<
       '/customers',
       '/customers',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/expense-categories': RouteRecordInfo<
+      '/expense-categories',
+      '/expense-categories',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/expenses': RouteRecordInfo<
+      '/expenses',
+      '/expenses',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -52,9 +73,30 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/incomes': RouteRecordInfo<
+      '/incomes',
+      '/incomes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/IncomeSource/IncomeSource': RouteRecordInfo<
+      '/IncomeSource/IncomeSource',
+      '/income-sources',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/login': RouteRecordInfo<
       '/login',
       '/login',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/saving-goals': RouteRecordInfo<
+      '/saving-goals',
+      '/saving-goals',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -116,9 +158,27 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'src/pages/currencies.vue': {
+      routes:
+        | '/currencies'
+      views:
+        | never
+    }
     'src/pages/customers.vue': {
       routes:
         | '/customers'
+      views:
+        | never
+    }
+    'src/pages/expense-categories.vue': {
+      routes:
+        | '/expense-categories'
+      views:
+        | never
+    }
+    'src/pages/expenses.vue': {
+      routes:
+        | '/expenses'
       views:
         | never
     }
@@ -128,9 +188,27 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'src/pages/incomes.vue': {
+      routes:
+        | '/incomes'
+      views:
+        | never
+    }
+    'src/pages/IncomeSource/IncomeSource.vue': {
+      routes:
+        | '/IncomeSource/IncomeSource'
+      views:
+        | never
+    }
     'src/pages/login.vue': {
       routes:
         | '/login'
+      views:
+        | never
+    }
+    'src/pages/saving-goals.vue': {
+      routes:
+        | '/saving-goals'
       views:
         | never
     }

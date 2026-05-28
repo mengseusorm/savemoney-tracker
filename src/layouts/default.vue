@@ -10,12 +10,54 @@ const route = useRoute()
 const open = ref(false)
 
 const links = [[{
-  label: 'Home',
+  label: 'Dashboard',
   icon: 'i-lucide-house',
   to: '/',
   onSelect: () => {
     open.value = false
   }
+}, {
+  label: 'Money',
+  icon: 'i-lucide-wallet-cards',
+  defaultOpen: true,
+  type: 'trigger',
+  children: [{
+    label: 'Currencies',
+    to: '/currencies',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Income Sources',
+    to: '/income-sources',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Incomes',
+    to: '/incomes',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Expense Categories',
+    to: '/expense-categories',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Expenses',
+    to: '/expenses',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Saving Goals',
+    to: '/saving-goals',
+    onSelect: () => {
+      open.value = false
+    }
+  }]
 }, {
   label: 'Inbox',
   icon: 'i-lucide-inbox',

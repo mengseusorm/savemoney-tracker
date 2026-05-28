@@ -9,6 +9,11 @@ const _useDashboard = () => {
 
   defineShortcuts({
     'g-h': () => router.push('/'),
+    'g-u': () => router.push('/currencies'),
+    'g-o': () => router.push('/income-sources'),
+    'g-n': () => router.push('/incomes'),
+    'g-e': () => router.push('/expenses'),
+    'g-g': () => router.push('/saving-goals'),
     'g-i': () => router.push('/inbox'),
     'g-c': () => router.push('/customers'),
     'g-s': () => router.push('/settings'),
