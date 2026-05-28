@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-import { formatCurrency } from '../../utils/money'
+import { computed, ref, watch } from 'vue'
 import type { Currency } from '../../types/money'
 
 const props = withDefaults(defineProps<{
@@ -14,7 +13,7 @@ const props = withDefaults(defineProps<{
   currencyName: 'currency_id'
 })
 
-const amount = defineModel<number>('amount', { default: 0 })
+const amount = defineModel<number | string>('amount', { default: 0 })
 const currencyId = defineModel<number>('currencyId', { default: 0 })
 const emit = defineEmits<{
   apply: [payload: { amount: number, currencyId: number, exchangeRate: number, convertedAmount: number }]
@@ -28,7 +27,19 @@ const currencyItems = computed(() => props.currencies
   })))
 const selectedCurrency = computed(() => props.currencies.find(currency => currency.id === currencyId.value) ?? props.currencies[0])
 const exchangeRate = computed(() => Number(selectedCurrency.value?.exchange_rate ?? 1))
-const convertedAmount = computed(() => Number(amount.value || 0) * exchangeRate.value)
+const amountInput = computed({
+  get: () => amount.value === '' ? '' : String(amount.value),
+  set: (value: string) => {
+    amount.value = value
+  }
+})
+const numericAmount = computed(() => {
+  const value = Number(amount.value || 0)
+
+  return Number.isFinite(value) ? value : 0
+})
+const convertedAmount = computed(() => exchangeRate.value > 0 ? numericAmount.value / exchangeRate.value : 0)
+const calculatorOpen = ref(false)
 
 watch(() => props.currencies, (currencies) => {
   if (!currencyId.value && currencies.length) {
@@ -36,13 +47,22 @@ watch(() => props.currencies, (currencies) => {
   }
 }, { immediate: true })
 
-function applyCalculation() {
+watch([amount, currencyId, exchangeRate], () => {
+  emitCalculation()
+})
+
+function emitCalculation() {
   emit('apply', {
-    amount: Number(amount.value || 0),
+    amount: numericAmount.value,
     currencyId: currencyId.value,
     exchangeRate: exchangeRate.value,
     convertedAmount: convertedAmount.value
   })
+}
+
+function applyCalculatorValue(value: number) {
+  amount.value = value
+  emitCalculation()
 }
 </script>
 
@@ -55,7 +75,7 @@ function applyCalculation() {
         required
       >
         <UInput
-          v-model="amount"
+          v-model="amountInput"
           type="number"
           step="0.01"
           min="0"
@@ -76,25 +96,25 @@ function applyCalculation() {
       </UFormField>
     </div>
 
-    <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-default bg-muted/40 px-3 py-2 text-sm">
-      <div class="text-muted">
-        <span>{{ selectedCurrency?.code ?? 'USD' }} rate:</span>
-        <span class="ms-1 font-medium text-highlighted">{{ exchangeRate.toFixed(6) }}</span>
-      </div>
-
-      <div class="text-muted">
-        <span>Base amount:</span>
-        <span class="ms-1 font-medium text-highlighted">{{ formatCurrency(convertedAmount) }}</span>
-      </div>
-
+    <div class="flex justify-end">
       <UButton
-        label="Apply calculate"
+        label="Calculate"
         icon="i-lucide-calculator"
         color="neutral"
         variant="subtle"
         size="sm"
-        @click="applyCalculation"
+        @click="calculatorOpen = true"
       />
     </div>
+
+    <SimpleCalculatorModal
+      v-model:open="calculatorOpen"
+      :initial-value="numericAmount"
+      :currency-code="selectedCurrency?.code ?? 'USD'"
+      :exchange-rate="exchangeRate"
+      title="Calculator"
+      :description="`${selectedCurrency?.code ?? 'USD'} to base currency`"
+      @apply="applyCalculatorValue"
+    />
   </div>
 </template>

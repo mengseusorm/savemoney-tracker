@@ -29,6 +29,7 @@ export interface Income {
   currency_amount: string | null
   exchange_rate: string
   income_date: string
+  income_end_date: string | null
   note: string | null
   source?: IncomeSource
   currency?: Currency | null
@@ -56,7 +57,15 @@ export interface Expense {
   currency_id: number | null
   currency_amount: string | null
   exchange_rate: string
+  is_daily_expense: boolean
+  daily_amount: string | null
+  daily_currency_amount: string | null
+  daily_days: number | null
   expense_date: string
+  expense_end_date: string | null
+  report_amount?: string
+  report_currency_amount?: string
+  report_days?: number
   note: string | null
   category?: ExpenseCategory
   currency?: Currency | null
@@ -112,5 +121,35 @@ export interface ListResponse<T> {
 
 export interface DataResponse<T> {
   message: string
+  data: T
+}
+
+export interface IncomeReportResponse {
+  from_date: string
+  to_date: string
+  total_amount: string
+  count: number
+  by_source: Array<{
+    name: string
+    total_amount: string
+    count: number
+  }>
+  rows: Income[]
+}
+
+export interface ExpenseReportResponse {
+  from_date: string
+  to_date: string
+  total_amount: string
+  count: number
+  by_category: Array<{
+    name: string
+    total_amount: string
+    count: number
+  }>
+  rows: Expense[]
+}
+
+export interface SingleDataResponse<T> {
   data: T
 }

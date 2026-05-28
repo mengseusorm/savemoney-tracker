@@ -14,6 +14,7 @@ const _useDashboard = () => {
     'g-n': () => router.push('/incomes'),
     'g-e': () => router.push('/expenses'),
     'g-g': () => router.push('/saving-goals'),
+    'g-r': () => router.push('/reports/incomes'),
     'g-i': () => router.push('/inbox'),
     'g-c': () => router.push('/customers'),
     'g-s': () => router.push('/settings'),

@@ -4,7 +4,7 @@ import { computed, h, onMounted, reactive, ref, resolveComponent, useTemplateRef
 import type { DropdownMenuItem, FormSubmitEvent, TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel, type Row } from '@tanstack/table-core'
 import { ApiError, apiFetch } from '../utils/api'
-import { formatCurrency, formatDate, toDateInput } from '../utils/money'
+import { formatCurrency, formatDate, formatOriginalCurrency, toDateInput } from '../utils/money'
 import { useAuth } from '../composables/useAuth'
 import type { Currency, DataResponse, Expense, ExpenseCategory, ListResponse } from '../types/money'
 
@@ -13,8 +13,13 @@ const schema = z.object({
   title: z.string().trim().min(2, 'Title must be at least 2 characters').max(255, 'Title is too long'),
   amount: z.coerce.number().gt(0, 'Amount must be greater than 0'),
   currency_id: z.coerce.number().int().gt(0, 'Currency is required'),
+  is_daily_expense: z.boolean().default(false),
   expense_date: z.string().min(1, 'Date is required'),
+  expense_end_date: z.string().min(1, 'End date is required'),
   note: z.string().trim().max(1000, 'Note is too long').optional().or(z.literal(''))
+}).refine(data => data.expense_end_date >= data.expense_date, {
+  path: ['expense_end_date'],
+  message: 'End date must be after the start date'
 })
 
 type ExpenseForm = z.output<typeof schema>
@@ -42,13 +47,16 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
+const currentMonthRange = getCurrentMonthRange()
 
 const state = reactive<ExpenseForm>({
   expense_category_id: 0,
   title: '',
   amount: 0,
   currency_id: 0,
-  expense_date: toDateInput(new Date().toISOString()),
+  is_daily_expense: false,
+  expense_date: currentMonthRange.start,
+  expense_end_date: currentMonthRange.end,
   note: ''
 })
 
@@ -79,14 +87,44 @@ function showError(error: unknown, fallback: string) {
   toast.add({ title: fallback, description, icon: 'i-lucide-alert-circle', color: 'error' })
 }
 
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function getCurrentMonthRange() {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+  return {
+    start: formatLocalDate(start),
+    end: formatLocalDate(end)
+  }
+}
+
 function resetForm(expense?: Expense) {
+  const defaultRange = getCurrentMonthRange()
+
   selectedExpense.value = expense ?? null
   state.expense_category_id = expense?.expense_category_id ?? (categoryItems.value[0]?.value ?? 0)
   state.title = expense?.title ?? ''
-  state.amount = Number(expense?.currency_amount ?? expense?.amount ?? 0)
+  state.amount = Number(expense?.daily_currency_amount ?? expense?.currency_amount ?? expense?.amount ?? 0)
   state.currency_id = expense?.currency_id ?? defaultCurrencyId.value
-  state.expense_date = toDateInput(expense?.expense_date) || toDateInput(new Date().toISOString())
+  state.is_daily_expense = expense?.is_daily_expense ?? false
+  state.expense_date = toDateInput(expense?.expense_date) || defaultRange.start
+  state.expense_end_date = toDateInput(expense?.expense_end_date) || defaultRange.end
   state.note = expense?.note ?? ''
+}
+
+function formatExpensePeriod(expense: Expense) {
+  const start = formatDate(expense.expense_date)
+  const end = expense.expense_end_date ? formatDate(expense.expense_end_date) : start
+
+  return start === end ? start : `${start} - ${end}`
 }
 
 function openCreateModal() {
@@ -145,7 +183,9 @@ async function onSubmit(event: FormSubmitEvent<Record<string, unknown>>) {
           title: data.title,
           amount: data.amount,
           currency_id: data.currency_id,
+          is_daily_expense: data.is_daily_expense,
           expense_date: data.expense_date,
+          expense_end_date: data.expense_end_date,
           note: data.note || null
         }
       }
@@ -215,15 +255,21 @@ const columns: TableColumn<Expense>[] = [{
   accessorKey: 'amount',
   header: 'Amount',
   cell: ({ row }) => h('div', undefined, [
-    h('p', { class: 'font-medium text-error' }, formatCurrency(row.original.amount)),
-    h('p', { class: 'text-xs text-muted' }, row.original.currency
-      ? `${formatCurrency(row.original.currency_amount, row.original.currency.code)} @ ${row.original.exchange_rate}`
-      : 'Base currency')
+    h('p', { class: 'font-medium text-error' }, formatOriginalCurrency(
+      row.original.amount,
+      row.original.currency_amount,
+      row.original.currency
+    )),
+    h('p', { class: 'text-xs text-muted' }, row.original.daily_amount !== null
+      ? `${row.original.is_daily_expense ? 'Daily' : 'Range'}: ${formatOriginalCurrency(row.original.daily_amount, row.original.daily_currency_amount, row.original.currency)} x ${row.original.daily_days ?? 0} days`
+      : row.original.currency
+        ? `Base: ${formatCurrency(row.original.amount)} @ ${row.original.exchange_rate}`
+        : 'Base currency')
   ])
 }, {
   accessorKey: 'expense_date',
   header: 'Date',
-  cell: ({ row }) => formatDate(row.original.expense_date)
+  cell: ({ row }) => formatExpensePeriod(row.original)
 }, {
   id: 'actions',
   cell: ({ row }) => h('div', { class: 'text-right' }, h(UDropdownMenu, {
@@ -333,16 +379,22 @@ onMounted(loadData)
       :currencies="currencies"
     />
 
-    <div class="grid gap-4 sm:grid-cols-2">
+    <UFormField name="is_daily_expense">
+      <UCheckbox
+        v-model="state.is_daily_expense"
+        label="Daily expense"
+      />
+    </UFormField>
+
+    <div v-if="!state.is_daily_expense" class="grid gap-4 sm:grid-cols-2">
       <UFormField
-        label="Date"
+        label="Date range"
         name="expense_date"
         required
       >
-        <UInput
+        <ReportDatePicker
           v-model="state.expense_date"
-          type="date"
-          class="w-full"
+          v-model:end="state.expense_end_date"
         />
       </UFormField>
     </div>

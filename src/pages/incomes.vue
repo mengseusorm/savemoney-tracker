@@ -4,7 +4,7 @@ import { computed, h, onMounted, reactive, ref, resolveComponent, useTemplateRef
 import type { DropdownMenuItem, FormSubmitEvent, TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel, type Row } from '@tanstack/table-core'
 import { ApiError, apiFetch } from '../utils/api'
-import { formatCurrency, formatDate, toDateInput } from '../utils/money'
+import { formatCurrency, formatDate, formatOriginalCurrency, toDateInput } from '../utils/money'
 import { useAuth } from '../composables/useAuth'
 import type { Currency, DataResponse, Income, IncomeSource, ListResponse } from '../types/money'
 
@@ -14,7 +14,11 @@ const schema = z.object({
   amount: z.coerce.number().gt(0, 'Amount must be greater than 0'),
   currency_id: z.coerce.number().int().gt(0, 'Currency is required'),
   income_date: z.string().min(1, 'Date is required'),
+  income_end_date: z.string().min(1, 'End date is required'),
   note: z.string().trim().max(1000, 'Note is too long').optional().or(z.literal(''))
+}).refine(data => data.income_end_date >= data.income_date, {
+  path: ['income_end_date'],
+  message: 'End date must be after the start date'
 })
 
 type IncomeForm = z.output<typeof schema>
@@ -42,13 +46,15 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
+const currentMonthRange = getCurrentMonthRange()
 
 const state = reactive<IncomeForm>({
   income_source_id: 0,
   title: '',
   amount: 0,
   currency_id: 0,
-  income_date: toDateInput(new Date().toISOString()),
+  income_date: currentMonthRange.start,
+  income_end_date: currentMonthRange.end,
   note: ''
 })
 
@@ -84,14 +90,43 @@ function showError(error: unknown, fallback: string) {
   })
 }
 
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function getCurrentMonthRange() {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+  return {
+    start: formatLocalDate(start),
+    end: formatLocalDate(end)
+  }
+}
+
 function resetForm(income?: Income) {
+  const defaultRange = getCurrentMonthRange()
+
   selectedIncome.value = income ?? null
   state.income_source_id = income?.income_source_id ?? (sourceItems.value[0]?.value ?? 0)
   state.title = income?.title ?? ''
   state.amount = Number(income?.currency_amount ?? income?.amount ?? 0)
   state.currency_id = income?.currency_id ?? defaultCurrencyId.value
-  state.income_date = toDateInput(income?.income_date) || toDateInput(new Date().toISOString())
+  state.income_date = toDateInput(income?.income_date) || defaultRange.start
+  state.income_end_date = toDateInput(income?.income_end_date) || defaultRange.end
   state.note = income?.note ?? ''
+}
+
+function formatIncomePeriod(income: Income) {
+  const start = formatDate(income.income_date)
+  const end = income.income_end_date ? formatDate(income.income_end_date) : start
+
+  return start === end ? start : `${start} - ${end}`
 }
 
 function openCreateModal() {
@@ -151,6 +186,7 @@ async function onSubmit(event: FormSubmitEvent<Record<string, unknown>>) {
           amount: data.amount,
           currency_id: data.currency_id,
           income_date: data.income_date,
+          income_end_date: data.income_end_date,
           note: data.note || null
         }
       }
@@ -220,15 +256,19 @@ const columns: TableColumn<Income>[] = [{
   accessorKey: 'amount',
   header: 'Amount',
   cell: ({ row }) => h('div', undefined, [
-    h('p', { class: 'font-medium text-success' }, formatCurrency(row.original.amount)),
+    h('p', { class: 'font-medium text-success' }, formatOriginalCurrency(
+      row.original.amount,
+      row.original.currency_amount,
+      row.original.currency
+    )),
     h('p', { class: 'text-xs text-muted' }, row.original.currency
-      ? `${formatCurrency(row.original.currency_amount, row.original.currency.code)} @ ${row.original.exchange_rate}`
+      ? `Base: ${formatCurrency(row.original.amount)} @ ${row.original.exchange_rate}`
       : 'Base currency')
   ])
 }, {
   accessorKey: 'income_date',
-  header: 'Date',
-  cell: ({ row }) => formatDate(row.original.income_date)
+  header: 'Period',
+  cell: ({ row }) => formatIncomePeriod(row.original)
 }, {
   id: 'actions',
   cell: ({ row }) => h('div', { class: 'text-right' }, h(UDropdownMenu, {
@@ -354,14 +394,13 @@ onMounted(loadData)
 
     <div class="grid gap-4 sm:grid-cols-2">
       <UFormField
-        label="Date"
+        label="Date range"
         name="income_date"
         required
       >
-        <UInput
+        <ReportDatePicker
           v-model="state.income_date"
-          type="date"
-          class="w-full"
+          v-model:end="state.income_end_date"
         />
       </UFormField>
     </div>

@@ -94,6 +94,20 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/reports/expenses': RouteRecordInfo<
+      '/reports/expenses',
+      '/reports/expenses',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/reports/incomes': RouteRecordInfo<
+      '/reports/incomes',
+      '/reports/incomes',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/saving-goals': RouteRecordInfo<
       '/saving-goals',
       '/saving-goals',
@@ -203,6 +217,18 @@ declare module 'vue-router/auto-routes' {
     'src/pages/login.vue': {
       routes:
         | '/login'
+      views:
+        | never
+    }
+    'src/pages/reports/expenses.vue': {
+      routes:
+        | '/reports/expenses'
+      views:
+        | never
+    }
+    'src/pages/reports/incomes.vue': {
+      routes:
+        | '/reports/incomes'
       views:
         | never
     }

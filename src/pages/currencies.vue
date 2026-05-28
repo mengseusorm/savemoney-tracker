@@ -50,7 +50,7 @@ const state = reactive<CurrencyForm>({
 })
 
 const modalTitle = computed(() => selectedCurrency.value ? 'Edit currency' : 'New currency')
-const modalDescription = computed(() => selectedCurrency.value ? 'Update this currency exchange rate.' : 'Create a currency for amount conversion.')
+const modalDescription = computed(() => selectedCurrency.value ? 'Update this currency rate.' : 'Create a currency for amount conversion.')
 const submitLabel = computed(() => selectedCurrency.value ? 'Save changes' : 'Create currency')
 const filteredCurrencies = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -218,7 +218,7 @@ const columns: TableColumn<Currency>[] = [{
   ])
 }, {
   accessorKey: 'exchange_rate',
-  header: 'Exchange Rate',
+  header: 'Units per USD',
   cell: ({ row }) => h('span', { class: 'font-medium tabular-nums' }, Number(row.original.exchange_rate).toFixed(6))
 }, {
   accessorKey: 'is_active',
@@ -361,7 +361,7 @@ onMounted(loadCurrencies)
       </UFormField>
 
       <UFormField
-        label="Exchange rate"
+        label="Units per USD"
         name="exchange_rate"
         required
       >

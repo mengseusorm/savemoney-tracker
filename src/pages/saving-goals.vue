@@ -4,7 +4,7 @@ import { computed, h, onMounted, reactive, ref, resolveComponent, useTemplateRef
 import type { DropdownMenuItem, FormSubmitEvent, TableColumn } from '@nuxt/ui'
 import { getPaginationRowModel, type Row } from '@tanstack/table-core'
 import { ApiError, apiFetch } from '../utils/api'
-import { formatCurrency, formatDate, toDateInput } from '../utils/money'
+import { formatCurrency, formatDate, formatOriginalCurrency, toDateInput } from '../utils/money'
 import { useAuth } from '../composables/useAuth'
 import type {
   DataResponse,
@@ -430,7 +430,7 @@ const columns: TableColumn<SavingGoal>[] = [{
     ]),
     h(UProgress, { modelValue: row.original.progress, max: 100 }),
     h('p', { class: 'text-xs text-muted' }, row.original.currency
-      ? `Target: ${formatCurrency(row.original.target_currency_amount, row.original.currency.code)} @ ${row.original.exchange_rate}`
+      ? `Target: ${formatOriginalCurrency(row.original.target_amount, row.original.target_currency_amount, row.original.currency)} @ ${row.original.exchange_rate}`
       : 'Base currency')
   ])
 }, {
@@ -472,9 +472,13 @@ const transactionColumns: TableColumn<SavingTransaction>[] = [{
   cell: ({ row }) => h('div', undefined, [
     h('p', {
       class: row.original.type === 'withdraw' ? 'font-medium text-error' : 'font-medium text-success'
-    }, formatCurrency(row.original.amount)),
+    }, formatOriginalCurrency(
+      row.original.amount,
+      row.original.currency_amount,
+      row.original.currency
+    )),
     h('p', { class: 'text-xs text-muted' }, row.original.currency
-      ? `${formatCurrency(row.original.currency_amount, row.original.currency.code)} @ ${row.original.exchange_rate}`
+      ? `Base: ${formatCurrency(row.original.amount)} @ ${row.original.exchange_rate}`
       : 'Base currency')
   ])
 }, {

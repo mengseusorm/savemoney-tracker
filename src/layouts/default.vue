@@ -59,6 +59,24 @@ const links = [[{
     }
   }]
 }, {
+  label: 'Reports',
+  icon: 'i-lucide-chart-column',
+  defaultOpen: true,
+  type: 'trigger',
+  children: [{
+    label: 'Income Reports',
+    to: '/reports/incomes',
+    onSelect: () => {
+      open.value = false
+    }
+  }, {
+    label: 'Expense Reports',
+    to: '/reports/expenses',
+    onSelect: () => {
+      open.value = false
+    }
+  }]
+}, {
   label: 'Inbox',
   icon: 'i-lucide-inbox',
   to: '/inbox',
