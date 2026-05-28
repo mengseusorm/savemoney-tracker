@@ -30,4 +30,4 @@ tsconfig.app.tsbuildinfo
 tsconfig.node.tsbuildinfo
 
 # Environment variables
-.env
+# .env
